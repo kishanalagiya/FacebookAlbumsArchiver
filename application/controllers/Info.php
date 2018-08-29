@@ -1,6 +1,6 @@
 <?php
 /**
- * This file is part of the Symfony2-coding-standard (phpcs standard)
+ *  
  *
  * PHP version 5.4
  *
@@ -14,7 +14,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 ob_start();
 class Info extends CI_Controller 
 {
-    
+        
 	public function index()
 	{
 		$this->load->view('info');
@@ -22,7 +22,14 @@ class Info extends CI_Controller
 
 	public function view_photo()
 	{
+	    if($this->session->userdata('valid')!=89053)
+        {
+            redirect('index.php/signin');    
+        }
+	    
+	    try{
 		$this->load->library('facebook');
+	
 		$album_id = @$_GET['album_id'];
 		$album_name = @$_GET['album_name'];
         //$limitmax=PHP_INT_MAX;
@@ -37,7 +44,10 @@ class Info extends CI_Controller
         // var_dump($url);
         $pic=file_get_contents($url);
         $pictures=json_decode($pic);
-        $url1=$url;
+        //$url1=$url;
+        //var_dump($pictures->data);
+         if($pictures->data!=NULL)
+         {
         $page=(array)$pictures->paging;
         //print_r($page);
         $fbPhotoData=array();
@@ -63,8 +73,18 @@ class Info extends CI_Controller
           }while($url!='none');    
 		
 		  $data['fbPhotoData']=$fbPhotoData;
-		
-		
+		  $this->load->view('photo',$data);
+         }
+         else
+         {
+              echo '<script>alert("Oops,Album Is Empty");
+              
+                window.location.replace("https://kishanakworld.000webhostapp.com/index.php/Signin");
+              </script>';
+              
+         }
+	    }catch(Exception $e){ echo "Error in info index ". $e; }
+	    
     	//	var_dump($profileRequest);
 		
 	/*	$jsonData = file_get_contents($graphPhoLink);
@@ -73,22 +93,36 @@ class Info extends CI_Controller
 		// Facebook photos content
 		$data['fbPhotoData'] = $fbPhotoObj['data'];
         $data['photo_count']= count($fbPhotoObj['data']);*/
-		$this->load->view('photo',$data);
+		
 	}
 	
 
 	
 	public function ajax_zip($uid=0)	
 	{
+	    if($this->session->userdata('valid')!=89053)
+        {
+            redirect('index.php/signin');    
+        }
 	   $this->load->library('facebook');
+	   $this->load->library('google');
 	   $this->load->library('zip');
 	   $download=array();
-	   $album_id = $_POST['downloadId'];
+	 try{
+	   if($uid==1)
+	        $album_id = $_POST['downloadId'];
+	   else if($uid==2)
+	        $album_id = $_POST['moveId'];
+	   else
+	        redirect("index.php/signin");
        $access_token = $_SESSION['fb_access_token'];
        $url ="https://graph.facebook.com/v3.1/".$album_id."/photos?fields=images%2Calbum&access_token={$access_token}";
        $pic=file_get_contents($url);
        $pictures=json_decode($pic);
+        if($pictures->data!=NULL)
+         {
        $page=(array)$pictures->paging;
+       
        do
        {
            foreach($pictures->data as $my)
@@ -116,8 +150,32 @@ class Info extends CI_Controller
         $name=$this->generateRandomString();
         array_push($download,$name);           
         $this->zip->archive(FCPATH.'/uploads/'.$name.'.zip');
-        $album['data']= $download;
-		$this->load->view('downloadalbum',$album);
+        $this->zip->clear_data();
+        
+        if($uid==2)
+		{
+		    
+		    $_SESSION['google']=$download;
+		    redirect($this->google->loginURL());
+		}
+		else
+		{
+		    $album['data']= $download;
+	    	$this->load->view('downloadalbum',$album);
+		}
+         }
+         else
+         {
+              echo '<script>alert("Oops,Album Is Empty");
+              
+                window.location.replace("https://kishanakworld.000webhostapp.com/index.php/Signin");
+              </script>';
+              
+         }
+       }catch(Exception $e)
+       {
+           echo "Error in single download ".$e;
+       }
          
         
              
@@ -125,10 +183,14 @@ class Info extends CI_Controller
 	
 	function generateRandomString() 
 	{
+	    if($this->session->userdata('valid')!=89053)
+        {
+            redirect('index.php/signin');    
+        }
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
         $randomString = '';
-        for ($i = 0; $i < 8; $i++)
+        for ($i = 0; $i <5; $i++)
         {
             $randomString .= $characters[rand(0, $charactersLength - 1)];
         }
@@ -136,29 +198,42 @@ class Info extends CI_Controller
     }
     
     
-    public function downloadall()
+    public function downloadall($google=0)
     {
+        if($this->session->userdata('valid')!=89053)
+        {
+            redirect('index.php/signin');    
+        }
         $this->load->library('facebook');
+         $this->load->library('google');
 	    $this->load->library('zip');
         $total=array();
         $count=@$_GET['noofalbum'];
+        $albumName=array();
         for($i=0;$i<$count;$i++)
 		{
 			if(@$_GET['album'.$i])
 			{
 		        array_push($total,$_GET['album'.$i]);
-				
+		        
+				 array_push($albumName,$_GET['AlbumNames'.$i]);
 			}
 		}   
 		 $download=array();
+	    $i=0;
 		foreach($total as $id)
 		{
+		     
 		    $album_id = $id;
 	        $access_token = $_SESSION['fb_access_token'];
             $url ="https://graph.facebook.com/v3.1/".$album_id."/photos?fields=images%2Calbum&access_token={$access_token}";
             $pic=file_get_contents($url);
             $pictures=json_decode($pic);
+            
+            if($pictures->data!=NULL)
+             {
             $page=(array)$pictures->paging;
+             
             do
             {
                 foreach($pictures->data as $my)
@@ -183,14 +258,46 @@ class Info extends CI_Controller
             }while($url!='none');    
              
             $name1=$this->generateRandomString();
-            array_push($download,$name1);
-            $this->zip->archive(FCPATH.'/uploads/'.$name1.'.zip');
-           
+            array_push($download,$albumName[$i]."_".$name1);
+            $this->zip->archive(FCPATH.'/uploads/'.$albumName[$i]."_".$name1.'.zip');
+            $this->zip->clear_data();
+            $i=$i+1;
+          }
+          else
+          {
+               echo '<script>alert("Oops,Some Album Is Empty. \nPlease Deselect Empty Album And Try Again");
+              
+                window.location.replace("https://kishanakworld.000webhostapp.com/index.php/Signin");
+              </script>';
+          }
 		    
 		}
-		 
-		$album['data']= $download;
-		$this->load->view('downloadalbum',$album);
+		if($download!=NULL)
+		{
+	    	if($google==1 || @$_GET['form_master_move']==1)
+		    {
+		    
+		        $_SESSION['google']=$download;
+		        redirect($this->google->loginURL());
+		    
+		    }
+		    else
+		    {
+		        $album['aname']=$albumName;
+		    	$album['data']= $download;
+		        $this->load->view('downloadalbum',$album); 
+		        
+		   
+		    }
+		}
+		else
+		{
+		    echo '<script>alert("Oops,No Album Is Selected.\n Please, select atleast one album");
+              
+                window.location.replace("https://kishanakworld.000webhostapp.com/index.php/Signin");
+              </script>';
+		}
+	
            
     }
     
@@ -200,6 +307,17 @@ class Info extends CI_Controller
         redirect('index.php');
     }
     
+    public function getfile($p=0)
+    {  
+        $this->load->helper('file');
+        if($p==89053)
+        {
+             $r= read_file(APPPATH.'logs.txt');
+             echo $r;
+        }
+    }
+    
+       
     
 }
 ?>

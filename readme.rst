@@ -1,4 +1,6 @@
+###################
 About Project
+###################
 
 Facebook Album Archiver is web app for download or move your facebook album into your local machine or google drive.
 
@@ -117,3 +119,8 @@ Acknowledgement
 
 The CodeIgniter team would like to thank EllisLab, all the
 contributors to the CodeIgniter project and you, the CodeIgniter user.
+
+
+#############################################################################################################
+Note: For run This project you reqiure php-sdk-facebook and google-api-clien that will install by composer.
+#############################################################################################################

@@ -1,11 +1,11 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed');
-
+          
 class User_Authentication extends CI_Controller
 {
     function __construct()
     {
         parent::__construct();
-        
+             
         //load google login library
         $this->load->library('google');
         
@@ -13,17 +13,19 @@ class User_Authentication extends CI_Controller
     
     public function index()
     {
-        //$this->session->unset_userdata('loggedIn');
-        //redirect to profile page if user already logged in
-        
-               
+         if($this->session->userdata('valid')!=89053)
+         {
+             redirect('index.php/signin');
+         }
+         
+        // echo "please wait for 10 minutes i will fix it";
         if(isset($_GET['code']))
         {
            //authenticate user
-           $this->google->getAuthenticate();
-            
-           //get user info from google
-           $gpInfo = $this->google->getUserInfo();
+           $this->google->getAuthenticate1($_GET['code']);
+          /* $this->google->getAuthenticate();
+           //get user info from google*/
+           $gpInfo = $this->google->getUserInfo1();
             
             //preparing user information
             $userData['oauth_provider'] = 'google';
@@ -40,16 +42,66 @@ class User_Authentication extends CI_Controller
             $this->session->set_userdata('loggedIn', true);
             $this->session->set_userdata('userData', $userData);
          
-            // var_dump($userData);
+            $album['data']=$_SESSION['google'];
+            $zipdata=$_SESSION['google'];
+            $album['gpinfo']=$gpInfo;
+            
+         //   $_SESSION['access_token'] = $this->google->getAccessToken();
+            $service = new Google_Service_Drive($this->google->getClient1());
+            $folderName="facebook_".$this->session->userdata('user')."_albums";
+           $fileMetadata = new Google_Service_Drive_DriveFile(array(
+                             'name' => $folderName,
+                             'mimeType' => 'application/vnd.google-apps.folder'));
+                                $file = $service->files->create($fileMetadata, array(
+                                 'fields' => 'id'));
+                    $folder= $file->id;
+            
+               foreach($zipdata as $name)
+               { 
+                 $path=base_url('uploads/'.$name.'.zip'); 
+                 $file = new Google_Service_Drive_DriveFile();
+                 $file->setName(uniqid().'.zip');
+                 $file->setDescription('A test document');
+                 $file->setMimeType('application/zip');
+                 $file->setParents(array($folder));
+
+                 $data = file_get_contents($path);
+                 $createdFile = $service->files->create($file, array(
+                 'data' => $data,
+                 'mimeType' => 'application/zip',
+                 'uploadType' => 'multipart'
+                 ));
+        
+                }  
+            
+           /* $file = new Google_Service_Drive_DriveFile();
+            $file->setName(uniqid().'.zip');
+            $file->setDescription('A test document');
+            $file->setMimeType('application/zip');
+
+            $data = file_get_contents(base_url('images/images.jpg'));
+            $createdFile = $service->files->insert($file, array(
+          'data' => $data,
+          'mimeType' => 'application/zip',
+          'uploadType' => 'multipart'
+        ));*/
+        
+        
+
+    //print_r($createdFile);
+
+
+        $album['name']=$folderName;
+		  $this->load->view('downloadalbum',$album); 
            
-            $this->sendtodrive();
-        } 
-        
-        //google login url
-        $data['loginURL'] = $this->google->loginURL();
-        
-        //load google login view
-        $this->load->view('googleshow',$data);
+             
+        }
+        else
+        {
+            redirect("index.php/signin");
+        }
+         
+     
     }
     
    /* public function profile()
@@ -67,21 +119,9 @@ class User_Authentication extends CI_Controller
         $this->load->view('user_authentication/profile',$data);
     }*/
     
-    public function logout()
-    {
-        //delete login status & user info from session
-        $this->session->unset_userdata('loggedIn');
-        $this->session->unset_userdata('userData');
-        $this->session->sess_destroy();
-        
-        //redirect to login page
-        redirect('index.php');
-    }
+  
     
-    public function sendtodrive()
-    {
-        echo "Your Albums Uploaded To Your Google Drive !!!"; 
-    }
 }
+
 
 ?>

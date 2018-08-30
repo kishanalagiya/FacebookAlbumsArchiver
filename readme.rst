@@ -22,14 +22,14 @@ Google Drive API is used to access google drive and manage folders and files of 
 
 **********************
 Third party libraries
-***********************
+**********************
 Bootstrap
 bootstrap version v3.3.7
 CodeIgniter library for facebook and google
 
 *******
 jQuery
-********
+*******
 jquery version v3.2.1
  
 ************************************

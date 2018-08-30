@@ -6,44 +6,72 @@ Facebook Album Archiver is web app for download or move your facebook album into
 
 First, You need to add your own facebook developer configurations (app id, app secret,redirect url) in application/config/facebook.php file and same for goog.php in cofing folder and then You need to add your own google developer configurations (id, secret,redirect url)  and facebook configuration.
 
+###################
 APIs Used
+###################
+
+********************
 Facebook Graph API
+*******************
 Facebook Graph API is used to get all the albums as well as all photographs of authenticated user. for this api you need facebook-php-sdk to communicate with facebook.
 
+********************
 Google Drive API
+*******************
 Google Drive API is used to access google drive and manage folders and files of authenticated used. for this api you need google-php-sdk to communicate with google.
 
+**********************
 Third party libraries
+***********************
 Bootstrap
 bootstrap version v3.3.7
+CodeIgniter library for facebook and google
 
+*******
 jQuery
+********
 jquery version v3.2.1
  
+************************************
 Google APIs Client Library for PHP
+*************************************
 The Google API Client Library enables you to work with Google APIs such as Google+, Drive, or YouTube on your server.
 
+*****************
 Requirements
+*****************
 PHP 5.4.0 or higher
 
+**************************
 Developer Documentation
+**************************
 http://developers.google.com/api-client-library/php
 
+****************************
 Facebook SDK for PHP (v5)
+*****************************
 open source PHP SDK that allows you to access the Facebook Platform from your PHP app.
 
+***************
 Installation
+*************
+
 The Facebook PHP SDK can be installed with Composer. Run this command:
 
 composer require facebook/graph-sdk
 Requirements
 PHP 5.4.0 or higher
 
+The Google-Client-api can be installed with Composer. Run this command:
+
+***********
 Demo Link
+***********
 http://kishanakwolrd.xyz
 
-
+***************************************
 Coding Standard Provide By CodeIgniter
+***************************************
 
 https://www.codeigniter.com/userguide2/general/styleguide.html
 

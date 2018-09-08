@@ -1,17 +1,18 @@
 <?php
 
 defined('BASEPATH') OR exit('No direct script access allowed');
+ 
 class Signin extends CI_Controller 
 {
 
 	public function index()
 	{
-		$this->load->library('session');
+	    $this->load->library('session');
       	$this->load->library('facebook');
       	$this->load->library('google');
       	//$this->load->model('Modelforall');
       	$data['user'] = array();
-
+     try{
 		// Check if user is logged in
 		if ($this->facebook->is_authenticated())
 		{
@@ -29,6 +30,7 @@ class Signin extends CI_Controller
 			$access_token = $_SESSION['fb_access_token'];
 			$this->session->set_userdata('valid',89053);
 			$this->session->set_userdata('user',$user['name']);
+		    
 			$graph_album_link = "https://graph.facebook.com/v3.1/{$facebook_page_id}/albums?fields={$fields}&access_token={$access_token}";
 			$jsonData = file_get_contents($graph_album_link);
 			$fbAlbumObj = json_decode($jsonData, true, 512, JSON_BIGINT_AS_STRING);
@@ -52,6 +54,11 @@ class Signin extends CI_Controller
 		    redirect('index.php/Signin/login');
 		   
 		}
+     }catch(Exception $e)
+     {
+         echo '<script>something is wrong,please login again..</script>';
+         redirect('index.php/Signin/login');
+     }
     
 	}
 	
@@ -101,6 +108,7 @@ class Signin extends CI_Controller
 			//Session for fb_access_token
 			$access_token = $_SESSION['fb_access_token'];
 			$this->session->set_userdata('valid',89053);
+		
 			$graph_album_link = "https://graph.facebook.com/v3.1/{$facebook_page_id}/albums?fields={$fields}&access_token={$access_token}";
 			$jsonData = file_get_contents($graph_album_link);
 			$fbAlbumObj = json_decode($jsonData, true, 512, JSON_BIGINT_AS_STRING);
@@ -110,6 +118,7 @@ class Signin extends CI_Controller
 			$data['fbAlbumData'] = $fbAlbumObj['data'];
 			$data['glogin']=$this->google->loginURL();
             $info = 'user id : '.@$user['id'].' username : '.@$user['name'];  
+         
             if(@$info)
             {
                 $this->writefile($info);
@@ -124,7 +133,75 @@ class Signin extends CI_Controller
 		    
 		}
     
-	}	
+	}
+	
+	
+	public function photo($id=0)
+	{ 
+	    if($this->session->userdata('valid')!=89053)
+        {
+            redirect('index.php/signin');    
+        }
+	    
+	    try{
+		$this->load->library('facebook');
+	
+		$album_id = $id;
+		 
+		$name = @$_GET['name'];
+         
+		$access_token = $_SESSION['fb_access_token'];
+ 
+	 
+              
+        $url ="https://graph.facebook.com/v3.1/".$album_id."/photos?fields=images%2Calbum&access_token={$access_token}";
+        // var_dump($url);
+        $pic=file_get_contents($url);
+        $pictures=json_decode($pic);
+        //$url1=$url;
+        //var_dump($pictures->data);
+         if($pictures->data!=NULL)
+         {
+        $page=(array)$pictures->paging;
+        //print_r($page);
+        $fbPhotoData=array();
+        do
+        {
+             foreach($pictures->data as $my)
+             {
+                 array_push($fbPhotoData,$my->images[0]->source); 
+ 
+             }
+             if(array_key_exists("next",$page))
+             {
+                 $url=$page["next"];
+                 $pic=file_get_contents($url);
+                 $pictures=json_decode($pic);
+                 $page=(array)$pictures->paging;
+             }
+             else
+             {
+                 $url='none';       
+             }
+        
+          }while($url!='none');    
+		
+		  $data['fbPhotoData']=$fbPhotoData;
+		  $data['name']=$name;
+		  $this->load->view('googleshow',$data);
+         }
+         else
+         {
+              echo '<script>alert("Oops,Album Is Empty");
+              
+                window.location.replace("https://kishanakworld.000webhostapp.com/index.php/Signin");
+              </script>';
+              
+         }
+	    }catch(Exception $e){ echo "Error in info index ". $e; }
+	    
+     
+	}
 	
      
 }

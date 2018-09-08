@@ -201,8 +201,6 @@ class Signin extends CI_Controller
 	    }catch(Exception $e){ echo "Error in info index ". $e; }
 	    
      
-	}
-	
-     
+	}  
 }
 ?>
